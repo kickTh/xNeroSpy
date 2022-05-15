@@ -44,8 +44,8 @@ end);do if game:GetService("CoreGui"):FindFirstChild("xNeroSpy") then end end
         
 wait(1)
 
-if getgenv().SimpleSpyExecuted and type(getgenv().SimpleSpyShutdown) == "function" then
-	print(pcall(getgenv().SimpleSpyShutdown))
+if getgenv().RemoteSpyExecuted and type(getgenv().RemoteSpyShutdown) == "function" then
+	print(pcall(getgenv().RemoteSpyShutdown))
 end
 
 local Players = game:GetService("Players")
@@ -241,7 +241,7 @@ Simple.BackgroundTransparency = 1
 Simple.Position = UDim2.new(0, 5, 0, 0)
 Simple.Size = UDim2.new(0, 57, 0, 18)
 Simple.Font = Enum.Font.SourceSansBold
-Simple.Text = "SimpleSpy Arceus x Work Fix by SOME X HUB"
+Simple.Text = "RemoteSpy Arceus x Work Fix by SOME X HUB"
 Simple.TextColor3 = Color3.new(1, 1, 1)
 Simple.TextSize = 14
 Simple.TextXAlignment = Enum.TextXAlignment.Left
@@ -372,14 +372,14 @@ local remoteFunction = Instance.new("RemoteFunction")
 local originalEvent = remoteEvent.FireServer
 local originalFunction = remoteFunction.InvokeServer
 --- the maximum amount of remotes allowed in logs
-getgenv().SIMPLESPYCONFIG_MaxRemotes = 500
+getgenv().RemoteSpyCONFIG_MaxRemotes = 500
 --- how many spaces to indent
 local indent = 4
 --- used for task scheduler
 local scheduled = {}
 --- RBXScriptConnect of the task scheduler
 local schedulerconnect
-local SimpleSpy = {}
+local RemoteSpy = {}
 local topstr = ""
 local bottomstr = ""
 local remotesFadeIn
@@ -409,10 +409,10 @@ local mouseInGui = false
 -- handy array of RBXScriptConnections to disconnect on shutdown
 local connections = {}
 
--- whether or not SimpleSpy uses 'getcallingscript()' to get the script (default is false because detection)
+-- whether or not RemoteSpy uses 'getcallingscript()' to get the script (default is false because detection)
 local useGetCallingScript = false
 
---- used to enable/disable SimpleSpy's keyToString for remotes
+--- used to enable/disable RemoteSpy's keyToString for remotes
 local keyToString = false
 
 -- determines whether return values are recorded
@@ -424,7 +424,7 @@ local recordReturnValues = false
 --- @param method string
 --- @param args any[]
 --- @return string
-function SimpleSpy:ArgsToString(method, args)
+function RemoteSpy:ArgsToString(method, args)
 	assert(typeof(method) == "string", "string expected, got " .. typeof(method))
 	assert(typeof(args) == "table", "table expected, got " .. typeof(args))
 	return v2v({ args = args }) .. "\n\n" .. method .. "(unpack(args))"
@@ -433,7 +433,7 @@ end
 --- Converts a value to variables with the specified index as the variable name (if nil/invalid then the name will be assigned automatically)
 --- @param t any[]
 --- @return string
-function SimpleSpy:TableToVars(t)
+function RemoteSpy:TableToVars(t)
 	assert(typeof(t) == "table", "table expected, got " .. typeof(t))
 	return v2v(t)
 end
@@ -441,7 +441,7 @@ end
 --- Converts a value to a variable with the specified `variablename` (if nil/invalid then the name will be assigned automatically)
 --- @param value any
 --- @return string
-function SimpleSpy:ValueToVar(value, variablename)
+function RemoteSpy:ValueToVar(value, variablename)
 	assert(variablename == nil or typeof(variablename) == "string", "string expected, got " .. typeof(variablename))
 	if not variablename then
 		variablename = 1
@@ -452,14 +452,14 @@ end
 --- Converts any value to a string, cannot preserve function contents
 --- @param value any
 --- @return string
-function SimpleSpy:ValueToString(value)
+function RemoteSpy:ValueToString(value)
 	return v2s(value)
 end
 
---- Generates the simplespy function info
+--- Generates the RemoteSpy function info
 --- @param func function
 --- @return string
-function SimpleSpy:GetFunctionInfo(func)
+function RemoteSpy:GetFunctionInfo(func)
 	assert(typeof(func) == "function", "Instance expected, got " .. typeof(func))
 	warn("Function info currently unavailable due to crashing in Synapse X")
 	return v2v({ functionInfo = {
@@ -470,7 +470,7 @@ end
 
 --- Gets the ScriptSignal for a specified remote being fired
 --- @param remote Instance
-function SimpleSpy:GetRemoteFiredSignal(remote)
+function RemoteSpy:GetRemoteFiredSignal(remote)
 	assert(typeof(remote) == "Instance", "Instance expected, got " .. typeof(remote))
 	if not remoteSignals[remote] then
 		remoteSignals[remote] = newSignal()
@@ -481,7 +481,7 @@ end
 --- Allows for direct hooking of remotes **THIS CAN BE VERY DANGEROUS**
 --- @param remote Instance
 --- @param f function
-function SimpleSpy:HookRemote(remote, f)
+function RemoteSpy:HookRemote(remote, f)
 	assert(typeof(remote) == "Instance", "Instance expected, got " .. typeof(remote))
 	assert(typeof(f) == "function", "function expected, got " .. typeof(f))
 	remoteHooks[remote] = f
@@ -489,7 +489,7 @@ end
 
 --- Blocks the specified remote instance/string
 --- @param remote any
-function SimpleSpy:BlockRemote(remote)
+function RemoteSpy:BlockRemote(remote)
 	assert(
 		typeof(remote) == "Instance" or typeof(remote) == "string",
 		"Instance | string expected, got " .. typeof(remote)
@@ -499,7 +499,7 @@ end
 
 --- Excludes the specified remote from logs (instance/string)
 --- @param remote any
-function SimpleSpy:ExcludeRemote(remote)
+function RemoteSpy:ExcludeRemote(remote)
 	assert(
 		typeof(remote) == "Instance" or typeof(remote) == "string",
 		"Instance | string expected, got " .. typeof(remote)
@@ -545,9 +545,9 @@ function newSignal()
 	}
 end
 
---- Prevents remote spam from causing lag (clears logs after `getgenv().SIMPLESPYCONFIG_MaxRemotes` or 500 remotes)
+--- Prevents remote spam from causing lag (clears logs after `getgenv().RemoteSpyCONFIG_MaxRemotes` or 500 remotes)
 function clean()
-	local max = getgenv().SIMPLESPYCONFIG_MaxRemotes
+	local max = getgenv().RemoteSpyCONFIG_MaxRemotes
 	if not typeof(max) == "number" and math.floor(max) ~= max then
 		max = 500
 	end
@@ -581,7 +581,7 @@ function scaleToolTip()
 	ToolTip.Size = UDim2.new(0, size.X + 4, 0, size.Y + 4)
 end
 
---- Executed when the toggle button (the SimpleSpy logo) is hovered over
+--- Executed when the toggle button (the RemoteSpy logo) is hovered over
 function onToggleButtonHover()
 	if not toggle then
 		TweenService:Create(Simple, TweenInfo.new(0.5), { TextColor3 = Color3.fromRGB(252, 51, 51) }):Play()
@@ -915,7 +915,7 @@ function isInDragRange(p)
 	return false
 end
 
---- Called when mouse enters SimpleSpy
+--- Called when mouse enters RemoteSpy
 function mouseEntered()
 	local existingCursor = xNeroSpy:FindFirstChild("Cursor")
 	while existingCursor do
@@ -930,8 +930,8 @@ function mouseEntered()
 	customCursor.Image = ""
 	customCursor.Parent = xNeroSpy
 	UserInputService.OverrideMouseIconBehavior = Enum.OverrideMouseIconBehavior.ForceHide
-	RunService:BindToRenderStep("SIMPLESPY_CURSOR", 1, function()
-		if mouseInGui and getgenv().SimpleSpyExecuted then
+	RunService:BindToRenderStep("RemoteSpy_CURSOR", 1, function()
+		if mouseInGui and getgenv().RemoteSpyExecuted then
 			local mouseLocation = UserInputService:GetMouseLocation() - Vector2.new(0, 36)
 			customCursor.Position = UDim2.fromOffset(
 				mouseLocation.X - customCursor.AbsoluteSize.X / 2,
@@ -950,7 +950,7 @@ function mouseEntered()
 		else
 			UserInputService.OverrideMouseIconBehavior = Enum.OverrideMouseIconBehavior.None
 			customCursor:Destroy()
-			RunService:UnbindFromRenderStep("SIMPLESPY_CURSOR")
+			RunService:UnbindFromRenderStep("RemoteSpy_CURSOR")
 		end
 	end)
 end
@@ -1101,7 +1101,7 @@ function backgroundUserInput(input)
 		local lastPos = UserInputService:GetMouseLocation()
 		local offset = Background.AbsoluteSize - lastPos
 		local currentPos = lastPos + offset
-		RunService:BindToRenderStep("SIMPLESPY_RESIZE", 1, function()
+		RunService:BindToRenderStep("RemoteSpy_RESIZE", 1, function()
 			local newPos = UserInputService:GetMouseLocation()
 			if newPos ~= lastPos then
 				local currentX = (newPos + offset).X
@@ -1133,7 +1133,7 @@ function backgroundUserInput(input)
 			connections,
 			UserInputService.InputEnded:Connect(function(inputE)
 				if input == inputE then
-					RunService:UnbindFromRenderStep("SIMPLESPY_RESIZE")
+					RunService:UnbindFromRenderStep("RemoteSpy_RESIZE")
 				end
 			end)
 		)
@@ -1281,7 +1281,7 @@ function newRemote(type, name, args, remote, function_info, blocked, src, return
 	schedule(function()
 		log.GenScript = genScript(remote, args)
 		if blocked then
-			logs[#logs].GenScript = "-- THIS REMOTE WAS PREVENTED FROM FIRING THE SERVER BY SIMPLESPY\n\n"
+			logs[#logs].GenScript = "-- THIS REMOTE WAS PREVENTED FROM FIRING THE SERVER BY RemoteSpy\n\n"
 				.. logs[#logs].GenScript
 		end
 	end)
@@ -1353,7 +1353,7 @@ function genScript(remote, args)
 			gen = gen .. v2s(remote) .. ":InvokeServer()"
 		end
 	end
-	gen = "-- Script generated by SimpleSpy - credits to SOMEXHUB\n\n" .. gen
+	gen = "" .. gen
 	prevTables = {}
 	return gen
 end
@@ -1485,11 +1485,11 @@ function t2s(t, l, p, n, vtv, i, pt, path, tables, tI)
 	l = l + indent -- set indentation level
 	for k, v in pairs(t) do -- iterates over table
 		size = size + 1 -- changes size for max limit
-		if size > (getgenv().SimpleSpyMaxTableSize or 1000) then
+		if size > (getgenv().RemoteSpyMaxTableSize or 1000) then
 			s = s
 				.. "\n"
 				.. string.rep(" ", l)
-				.. "-- MAXIMUM TABLE SIZE REACHED, CHANGE 'getgenv().SimpleSpyMaxTableSize' TO ADJUST MAXIMUM SIZE "
+				.. "-- MAXIMUM TABLE SIZE REACHED, CHANGE 'getgenv().RemoteSpyMaxTableSize' TO ADJUST MAXIMUM SIZE "
 			break
 		end
 		if rawequal(k, t) then -- checks if the table being iterated over is being used as an index within itself (yay, lua)
@@ -1542,7 +1542,7 @@ function k2s(v, ...)
 	if keyToString then
 		if typeof(v) == "userdata" and getrawmetatable(v) then
 			return string.format(
-				'"<void> (%s)" --[[Potentially hidden data (tostring in SimpleSpy:HookRemote/GetRemoteFiredSignal at your own risk)]]',
+				'"<void> (%s)" --[[Potentially hidden data (tostring in RemoteSpy:HookRemote/GetRemoteFiredSignal at your own risk)]]',
 				safetostring(v)
 			)
 		elseif typeof(v) == "userdata" then
@@ -1833,7 +1833,7 @@ function formatstr(s, indentation)
 		.. '"'
 		.. (
 			reachedMax
-				and " --[[ MAXIMUM STRING SIZE REACHED, CHANGE 'getgenv().SimpleSpyMaxStringSize' TO ADJUST MAXIMUM SIZE ]]"
+				and " --[[ MAXIMUM STRING SIZE REACHED, CHANGE 'getgenv().RemoteSpyMaxStringSize' TO ADJUST MAXIMUM SIZE ]]"
 			or ""
 		)
 end
@@ -2203,7 +2203,7 @@ function toggleSpy()
 			end
 			setreadonly(gm, false)
 			if not original then
-				warn("SimpleSpy: namecall method not found!")
+				warn("RemoteSpy: namecall method not found!")
 				onToggleButtonClick()
 				return
 			end
@@ -2257,14 +2257,14 @@ function shutdown()
 		gm.__namecall = original
 		setreadonly(gm, true)
 	end
-	getgenv().SimpleSpyExecuted = false
+	getgenv().RemoteSpyExecuted = false
 end
 
 -- main
-if not getgenv().SimpleSpyExecuted then
+if not getgenv().RemoteSpyExecuted then
 	local succeeded, err = pcall(function()
 		if not RunService:IsClient() then
-			error("SimpleSpy cannot run on the server!")
+			error("RemoteSpy cannot run on the server!")
 		end
 		if
 			not hookfunction
@@ -2287,11 +2287,11 @@ if not getgenv().SimpleSpyExecuted then
 			end
 			shutdown()
 			error(
-				"This environment does not support method hooks!\n(Your exploit is not capable of running SimpleSpy)\nMissing: "
+				"This environment does not support method hooks!\n(Your exploit is not capable of running RemoteSpy)\nMissing: "
 					.. table.concat(missing, ", ")
 			)
 		end
-		getgenv().SimpleSpyShutdown = shutdown
+		getgenv().RemoteSpyShutdown = shutdown
 		ContentProvider:PreloadAsync({
 			"rbxassetid://6065821980",
 			"rbxassetid://6065774948",
@@ -2307,7 +2307,7 @@ if not getgenv().SimpleSpyExecuted then
 		FunctionTemplate.Parent = nil
 		codebox = Highlight.new(CodeBox)
 		codebox:setRaw("")
-		getgenv().SimpleSpy = SimpleSpy
+		getgenv().RemoteSpy = RemoteSpy
 		getgenv().getNil = function(name, class)
 			for _, v in pairs(getnilinstances()) do
 				if v.ClassName == class and v.Name == name then
@@ -2339,7 +2339,7 @@ if not getgenv().SimpleSpyExecuted then
 		bringBackOnResize()
 		xNeroSpy.Parent = --[[gethui and gethui() or]]
 			CoreGui
-		getgenv().SimpleSpyExecuted = true
+		getgenv().RemoteSpyExecuted = true
 		if not Players.LocalPlayer then
 			Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
 		end
@@ -2349,7 +2349,7 @@ if not getgenv().SimpleSpyExecuted then
 	end)
 	if not succeeded then
 		warn(
-			"A fatal error has occured, SimpleSpy was unable to launch properly.\nPlease DM this error message to @SOMEXHUB:\n\n"
+			"A fatal error has occured, RemoteSpy was unable to launch properly.\nPlease DM this error message to @SOMEXHUB:\n\n"
 				.. tostring(err)
 		)
 		xNeroSpy:Destroy()
@@ -2432,7 +2432,7 @@ newButton("Get Script", function()
 	return "Click to copy calling script to clipboard\nWARNING: Not super reliable, nil == could not find"
 end, function()
 	if selected then
-		setclipboard(SimpleSpy:ValueToString(selected.Source))
+		setclipboard(RemoteSpy:ValueToString(selected.Source))
 		TextLabel.Text = "Done!"
 	end
 end)
@@ -2444,10 +2444,10 @@ end, function()
 	if selected then
 		if selected.Function then
 			codebox:setRaw(
-				"-- Calling function info\n-- Generated by the SimpleSpy serializer\n\n" .. tostring(selected.Function)
+				"-- Calling function info\n-- Generated by the RemoteSpy serializer\n\n" .. tostring(selected.Function)
 			)
 		end
-		TextLabel.Text = "Done! Function info generated by the SimpleSpy Serializer."
+		TextLabel.Text = "Done! Function info generated by the RemoteSpy Serializer."
 	end
 end)
 
@@ -2469,7 +2469,7 @@ end)
 
 --- Excludes the selected.Log Remote from the RemoteSpy
 newButton("Exclude (i)", function()
-	return "Click to exclude this Remote.\nExcluding a remote makes SimpleSpy ignore it, but it will continue to be usable."
+	return "Click to exclude this Remote.\nExcluding a remote makes RemoteSpy ignore it, but it will continue to be usable."
 end, function()
 	if selected then
 		blacklist[selected.Remote.remote] = true
@@ -2479,7 +2479,7 @@ end)
 
 --- Excludes all Remotes that share the same name as the selected.Log remote from the RemoteSpy
 newButton("Exclude (n)", function()
-	return "Click to exclude all remotes with this name.\nExcluding a remote makes SimpleSpy ignore it, but it will continue to be usable."
+	return "Click to exclude all remotes with this name.\nExcluding a remote makes RemoteSpy ignore it, but it will continue to be usable."
 end, function()
 	if selected then
 		blacklist[selected.Name] = true
@@ -2489,7 +2489,7 @@ end)
 
 --- clears blacklist
 newButton("Clr Blacklist", function()
-	return "Click to clear the blacklist.\nExcluding a remote makes SimpleSpy ignore it, but it will continue to be usable."
+	return "Click to clear the blacklist.\nExcluding a remote makes RemoteSpy ignore it, but it will continue to be usable."
 end, function()
 	blacklist = {}
 	TextLabel.Text = "Blacklist cleared!"
@@ -2497,7 +2497,7 @@ end)
 
 --- Prevents the selected.Log Remote from firing the server (still logged)
 newButton("Block (i)", function()
-	return "Click to stop this remote from firing.\nBlocking a remote won't remove it from SimpleSpy logs, but it will not continue to fire the server."
+	return "Click to stop this remote from firing.\nBlocking a remote won't remove it from RemoteSpy logs, but it will not continue to fire the server."
 end, function()
 	if selected then
 		if selected.Remote.remote then
@@ -2511,7 +2511,7 @@ end)
 
 --- Prevents all remotes from firing that share the same name as the selected.Log remote from the RemoteSpy (still logged)
 newButton("Block (n)", function()
-	return "Click to stop remotes with this name from firing.\nBlocking a remote won't remove it from SimpleSpy logs, but it will not continue to fire the server."
+	return "Click to stop remotes with this name from firing.\nBlocking a remote won't remove it from RemoteSpy logs, but it will not continue to fire the server."
 end, function()
 	if selected then
 		blocklist[selected.Name] = true
@@ -2521,7 +2521,7 @@ end)
 
 --- clears blacklist
 newButton("Clr Blocklist", function()
-	return "Click to stop blocking remotes.\nBlocking a remote won't remove it from SimpleSpy logs, but it will not continue to fire the server."
+	return "Click to stop blocking remotes.\nBlocking a remote won't remove it from RemoteSpy logs, but it will not continue to fire the server."
 end, function()
 	blocklist = {}
 	TextLabel.Text = "Blocklist cleared!"
@@ -2571,13 +2571,13 @@ end)
 
 newButton("CallingScript", function()
 	return string.format(
-		"[%s] [UNSAFE] Uses 'getcallingscript' to get calling script for Decompile and GetScript. Much more reliable, but opens up SimpleSpy to detection and/or instability.",
+		"[%s] [UNSAFE] Uses 'getcallingscript' to get calling script for Decompile and GetScript. Much more reliable, but opens up RemoteSpy to detection and/or instability.",
 		useGetCallingScript and "ENABLED" or "DISABLED"
 	)
 end, function()
 	useGetCallingScript = not useGetCallingScript
 	TextLabel.Text = string.format(
-		"[%s] [UNSAFE] Uses 'getcallingscript' to get calling script for Decompile and GetScript. Much more reliable, but opens up SimpleSpy to detection and/or instability.",
+		"[%s] [UNSAFE] Uses 'getcallingscript' to get calling script for Decompile and GetScript. Much more reliable, but opens up RemoteSpy to detection and/or instability.",
 		useGetCallingScript and "ENABLED" or "DISABLED"
 	)
 end)
@@ -2612,6 +2612,6 @@ newButton("GetReturnValue", function()
 	return "[Experimental] If 'ReturnValues' is enabled, this will show the recorded return value for the RemoteFunction (if available)."
 end, function()
 	if selected then
-		codebox:setRaw(SimpleSpy:ValueToVar(selected.ReturnValue, "returnValue"))
+		codebox:setRaw(RemoteSpy:ValueToVar(selected.ReturnValue, "returnValue"))
 	end
 end)
